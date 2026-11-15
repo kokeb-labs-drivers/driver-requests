@@ -1,0 +1,70 @@
+name: Request a port or target
+description: Ask for the drivers to run on an MCU family, SDK or RTOS that has no port yet.
+title: "Port: "
+labels: ["port-request"]
+type: Port request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A port is the small layer between a driver and a platform's bus and timer API. Check the
+        [platforms page](https://github.com/orgs/kokeb-labs-drivers/repositories?q=port-) for the ports that exist.
+        If your target is already requested, add a 👍 to that issue instead.
+  - type: input
+    id: target
+    attributes:
+      label: MCU family or target
+      placeholder: RP2350
+    validations:
+      required: true
+  - type: input
+    id: sdk
+    attributes:
+      label: SDK and version
+      placeholder: Pico SDK 2.1
+    validations:
+      required: true
+  - type: dropdown
+    id: rtos
+    attributes:
+      label: RTOS
+      options:
+        - None (bare metal)
+        - FreeRTOS
+        - Zephyr
+        - ThreadX
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: board
+    attributes:
+      label: Development kit
+      description: The evaluation or development kit you would test on (optional).
+  - type: textarea
+    id: drivers
+    attributes:
+      label: Drivers you want on it
+      description: Which drivers you would use first on this target (optional).
+  - type: textarea
+    id: why
+    attributes:
+      label: Why the existing ports do not fit
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I can test it on hardware
+        - label: I can review the pull request
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched the existing requests and ports
+          required: true
+        - label: I attached no file and no confidential or NDA document
+          required: true

@@ -1,0 +1,87 @@
+# Checks for this repository: the triage unit tests, Markdown, YAML, and DCO sign-off on pull requests.
+name: CI gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Triage tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Unit tests
+        run: python3 -m unittest discover -s tools/triage -v
+      - name: Byte-compile
+        run: python3 -m py_compile tools/triage/triage.py
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: "22"
+      - name: Markdown
+        run: npx --yes markdownlint-cli2@0.18.1 "**/*.md" "#node_modules"
+      - name: YAML
+        run: |
+          python3 -m pip install --quiet --user yamllint==1.37.1
+          python3 -m yamllint -c .yamllint.yml .github .yamllint.yml
+
+  dco:
+    name: DCO
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Every commit is signed off by its author
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          bad=0
+          for c in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            author="$(git log -1 --format='%an <%ae>' "$c")"
+            if ! git log -1 --format='%B' "$c" | grep -qiF "Signed-off-by: $author"; then
+              echo "::error::$(git log -1 --format='%h %s' "$c") has no 'Signed-off-by: $author'"
+              bad=1
+            fi
+          done
+          exit "$bad"
+
+  gate:
+    name: gate
+    if: always()
+    needs: [test, lint, dco]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: All required jobs passed or were skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "::error::a job ended with $r"; exit 1 ;; esac
+          done

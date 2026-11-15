@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/kokeb-labs-drivers/.github/discussions
+    about: Ask usage questions, share ideas and show what you built. Requests that are ready become issues here.
+  - name: A bug in an existing driver
+    url: https://github.com/orgs/kokeb-labs-drivers/repositories?q=driver-
+    about: Open the issue in that driver's own repository, where its bug form asks for the version and the port.
+  - name: Security vulnerability
+    url: https://github.com/kokeb-labs-drivers/.github/blob/main/SECURITY.md
+    about: Report privately through a GitHub security advisory or by email. Do not open a public issue.

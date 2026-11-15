@@ -1,0 +1,86 @@
+name: Report a datasheet erratum
+description: >-
+  The chip does not do what its datasheet says, and a driver depends on it. After triage the issue moves to the
+  driver's repository.
+title: "Erratum: "
+labels: ["erratum"]
+type: Erratum
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when the datasheet and the chip disagree. A bug in a driver's own code goes to that driver's
+        repository instead. Cite the document by number and revision; quote only the few words you need, and
+        never attach the document.
+  - type: input
+    id: driver
+    attributes:
+      label: Driver repository
+      description: The repository name, for example driver-bmp581.
+      placeholder: driver-bmp581
+    validations:
+      required: true
+  - type: input
+    id: part
+    attributes:
+      label: Part number
+      placeholder: BMP581
+    validations:
+      required: true
+  - type: input
+    id: document
+    attributes:
+      label: Document number
+      description: As printed on the datasheet, for example BST-BMP581-DS004.
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Document revision
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Page, section and table or figure
+      placeholder: "Section 4.3.2, Table 21, printed page 34"
+    validations:
+      required: true
+  - type: textarea
+    id: says
+    attributes:
+      label: What the document says
+      description: In your own words, with at most a short quote.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What the chip does
+      description: >-
+        What you measured or read back, with evidence: register dumps, bus traces, scope captures (as text or
+        images you made), firmware and driver version.
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Seen on hardware
+      options:
+        - Yes, on hardware
+        - No, from reading the document only
+    validations:
+      required: true
+  - type: input
+    id: vendor-erratum
+    attributes:
+      label: Vendor errata link
+      description: An https link to a published vendor erratum or application note, if there is one (optional).
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I attached no datasheet and no confidential or NDA document
+          required: true
