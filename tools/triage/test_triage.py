@@ -22,11 +22,13 @@ FORMS = {
 VENDORS = t.load_vendors()
 
 
-def driver_body(part="TMP117", datasheet="https://www.ti.com/product/TMP117", confirm=True, extra=""):
+def driver_body(part="TMP117", datasheet="https://www.ti.com/product/TMP117", confirm=True, extra="",
+                documents="https://www.ti.com/lit/er/sbaz055/sbaz055.pdf", prior="_No response_"):
     box = "X" if confirm else " "
     return (
         f"### Part number\n\n{part}\n\n### Vendor\n\nTexas Instruments\n\n### Bus\n\nI2C\n\n"
-        f"### Datasheet link\n\n{datasheet}\n\n### Variants and packages\n\n_No response_\n\n"
+        f"### Datasheet link\n\n{datasheet}\n\n### Application notes and errata\n\n{documents}\n\n"
+        f"### Research and existing code\n\n{prior}\n\n### Variants and packages\n\n_No response_\n\n"
         f"### Features you need first\n\nOne-shot conversion, alert pin.{extra}\n\n"
         "### Target MCU families\n\nESP32 (ESP-IDF), STM32\n\n"
         "### Contribution\n\n- [X] I can test it on hardware\n- [ ] I can review the pull request\n"
@@ -181,6 +183,28 @@ class PlanIssue(unittest.TestCase):
                              VENDORS)
         self.assertEqual(fixed.remove_labels, ["needs-datasheet"])
         self.assertEqual(fixed.add_labels, [])
+
+    def plan(self, **kw):
+        return t.plan_issue(t.KIND_DRIVER, driver_body(**kw), ["driver-request"], VENDORS)
+
+    def test_documents_are_vendor_links_or_none_published(self):
+        ok = "https://www.ti.com/lit/ug/sbou213/sbou213.pdf\n- https://www.ti.com/lit/er/sbaz055/sbaz055.pdf"
+        for documents in (ok, "none published", "None-published"):
+            self.assertNotIn("needs-datasheet", self.plan(documents=documents).add_labels, documents)
+        for documents in ("_No response_", "https://example.com/appnote.pdf", "see the vendor site",
+                          "https://www.ti.com/ok.pdf\nhttp://www.ti.com/plain.pdf"):
+            p = self.plan(documents=documents)
+            self.assertIn("needs-datasheet", p.add_labels, documents)
+            self.assertTrue(any("Application notes and errata" in n for n in p.notes), documents)
+
+    def test_prior_work_is_optional_and_only_shape_checked(self):
+        for prior in ("_No response_", "https://github.com/example/tmp117 (GPL-2.0)\nhttps://example.org/paper.pdf"):
+            p = self.plan(prior=prior)
+            self.assertEqual((p.add_labels, p.notes), (["chip:TMP117"], []), prior)
+        for prior in ("ftp://example.com/x", "https://user:pw@example.com/x", "a driver I wrote once"):
+            p = self.plan(prior=prior)
+            self.assertEqual(p.add_labels, ["chip:TMP117"], prior)  # a note, never a label
+            self.assertTrue(any("Research and existing code" in n for n in p.notes), prior)
 
     def test_part_change_moves_chip_label(self):
         p = t.plan_issue(t.KIND_DRIVER, driver_body(part="TMP116"), ["driver-request", "chip:TMP117"], VENDORS)
