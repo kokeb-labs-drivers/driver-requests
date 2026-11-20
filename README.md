@@ -73,8 +73,9 @@ When the request is opened or edited, the triage workflow:
   labels the issue `chip:<PART>` (for example `chip:TMP117`);
 - lists in one comment the other requests with the same label and the existing driver repositories that may cover
   the part (nothing is closed automatically: a maintainer closes duplicates);
-- labels `needs-datasheet` when the datasheet link or an application-notes line is not `https` on a vendor domain, and `needs-info` when the part number
-  cannot be read or a confirmation box is not ticked. Editing the issue re-runs the check and clears the label.
+- labels `needs-datasheet` when the datasheet link or an application-notes line is not `https` on a vendor domain,
+  and `needs-info` when the part number cannot be read or a confirmation box is not ticked. Editing the issue
+  re-runs the check and clears the label.
 
 A request that is a datasheet erratum is moved to the driver's repository after triage, because it changes that
 driver.
