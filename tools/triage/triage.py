@@ -47,6 +47,8 @@ FORM_FIELDS: dict[str, dict[str, str]] = {
         "Vendor": "vendor",
         "Bus": "bus",
         "Datasheet link": "datasheet",
+        "Application notes and errata": "documents",
+        "Research and existing code": "prior",
         "Variants and packages": "variants",
         "Features you need first": "features",
         "Target MCU families": "targets",
@@ -214,6 +216,50 @@ def check_datasheet_url(raw: object, vendors: Iterable[str]) -> str | None:
     return "not on a vendor domain in tools/triage/vendors.txt"
 
 
+MAX_LISTED_LINKS = 10
+_NONE_PUBLISHED = re.compile(r"none[ -]published", re.I)
+
+
+def listed_links(raw: object) -> list[str]:
+    """The links of a one-per-line field (a leading bullet is allowed), at most MAX_LISTED_LINKS."""
+    if not isinstance(raw, str):
+        return []
+    lines = [re.sub(r"^[-*]\s+", "", ln.strip()) for ln in raw.splitlines()]
+    return [ln for ln in lines if ln][:MAX_LISTED_LINKS]
+
+
+def check_documents(raw: object, vendors: Iterable[str]) -> str | None:
+    """None when every listed document is a vendor link or the field says none are published; else a reason."""
+    links = listed_links(raw)
+    if not links or raw.strip() == "_No response_":  # type: ignore[union-attr]
+        return "empty: list the vendor's application notes and errata, or write \"none published\""
+    if len(links) == 1 and _NONE_PUBLISHED.fullmatch(links[0]):
+        return None
+    for link in links:
+        reason = check_datasheet_url(link, vendors)
+        if reason is not None:
+            return f"{reason} (line {links.index(link) + 1})"
+    return None
+
+
+def check_prior(raw: object) -> str | None:
+    """None when every listed prior-work line is a plain https link (any site); else a reason. Never fetched."""
+    if not isinstance(raw, str) or not raw.strip() or raw.strip() == "_No response_":
+        return None
+    for ln in listed_links(raw):
+        link = ln.split()[0]  # a licence note may follow the link
+        try:
+            url = urllib.parse.urlsplit(link)
+            port = url.port
+        except ValueError:
+            return "a line that is not a valid link"
+        if url.scheme != "https" or not url.hostname or url.username or url.password or port not in (None, 443):
+            return "a line that is not a plain https link"
+        if _ATTACHMENT_RE.search(link):
+            return "an uploaded file instead of a link"
+    return None
+
+
 def has_attachment(body: str | None) -> bool:
     return bool(body) and bool(_ATTACHMENT_RE.search(body[:MAX_BODY]))
 
@@ -284,6 +330,20 @@ def plan_issue(kind: str, body: str | None, labels: Iterable[str], vendors: list
                 f"Datasheet link: {reason}. Please link the product page or datasheet on the vendor's own "
                 "website (https). If the vendor is missing from `tools/triage/vendors.txt`, say so in a comment "
                 "and a maintainer adds it."
+            )
+    if kind == KIND_DRIVER:
+        reason = check_documents(fields.get("documents"), vendors)
+        if reason is not None:
+            flags.add(LABEL_NEEDS_DATASHEET)
+            plan.notes.append(
+                f"Application notes and errata: {reason}. Link them on the vendor's own website, one per line, or "
+                "write \"none published\"."
+            )
+        reason = check_prior(fields.get("prior"))
+        if reason is not None:
+            plan.notes.append(
+                f"Research and existing code: {reason}. Use one https link per line (a licence may follow it); "
+                "links are read as background and never opened by the triage check."
             )
     if kind == KIND_ERRATUM:
         driver = fields.get("driver")

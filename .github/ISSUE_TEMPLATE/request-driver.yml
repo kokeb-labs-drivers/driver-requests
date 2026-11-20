@@ -12,8 +12,10 @@ body:
         and the [existing drivers](https://github.com/orgs/kokeb-labs-drivers/repositories?q=driver-).
         If the chip is already requested, add a 👍 to that issue instead of opening a new one.
 
-        Link to the datasheet on the vendor's own website. Do not attach a PDF or any other file, and never
-        share a document under NDA or marked confidential: a driver is only written from public documents.
+        Link the datasheet, and the application notes and errata that go with it, on the vendor's own website.
+        The more of the chip's public documents you supply, the sooner a driver can start: it is written from
+        them and from nothing else. Do not attach a PDF or any other file, and never share a document under NDA
+        or marked confidential: a driver is only written from public documents.
   - type: input
     id: part
     attributes:
@@ -58,6 +60,27 @@ body:
       placeholder: https://www.ti.com/product/TMP117
     validations:
       required: true
+  - type: textarea
+    id: documents
+    attributes:
+      label: Application notes and errata
+      description: >-
+        One link per line, each on the vendor's own website: the programming or register guide, application
+        notes the datasheet relies on, and the errata sheet. Write "none published" if the vendor has none.
+      placeholder: |
+        https://www.ti.com/lit/ug/sbou213/sbou213.pdf
+        https://www.ti.com/lit/er/sbaz055/sbaz055.pdf
+    validations:
+      required: true
+  - type: textarea
+    id: prior
+    attributes:
+      label: Research and existing code
+      description: >-
+        Optional. Links that help someone understand the chip: a paper, a forum thread, a teardown, or a driver or
+        project that already talks to it (say what its licence is). Links only, never pasted code: it is read as
+        background and no code is copied from a project without a compatible licence.
+      placeholder: https://github.com/example/tmp117-linux-driver (GPL-2.0)
   - type: textarea
     id: variants
     attributes:

@@ -37,6 +37,20 @@ The triage check compares the host with the vendor list in [`tools/triage/vendor
 and labels the request `needs-datasheet` otherwise. If the vendor is missing, say so in a comment and a maintainer
 adds the domain. The link is only parsed: the check never opens it.
 
+## Application notes, errata and what already exists
+
+The more of the chip's public documents a request supplies, the sooner a driver can start, because it is written from
+them and from nothing else.
+
+- **Application notes and errata** (required): one link per line, each on the vendor's own website like the
+  datasheet: the programming or register guide, the application notes the datasheet relies on, and the errata sheet.
+  Write `none published` if the vendor has none. The triage check applies the datasheet rules to every line and labels
+  the request `needs-datasheet` otherwise.
+- **Research and existing code** (optional): links that help someone understand the chip, such as a paper, a forum
+  thread or a teardown, and any driver or project that already talks to it, with its licence. Links only, never pasted
+  code. The factory reads them as background; no code is taken from a project whose licence does not allow it, and a
+  driver is never a translation of another driver.
+
 ## What happens to a request
 
 Every request is on the board [Driver pipeline](https://github.com/orgs/kokeb-labs-drivers/projects). Its *Stage*
@@ -59,7 +73,7 @@ When the request is opened or edited, the triage workflow:
   labels the issue `chip:<PART>` (for example `chip:TMP117`);
 - lists in one comment the other requests with the same label and the existing driver repositories that may cover
   the part (nothing is closed automatically: a maintainer closes duplicates);
-- labels `needs-datasheet` when the link is not `https` on a vendor domain, and `needs-info` when the part number
+- labels `needs-datasheet` when the datasheet link or an application-notes line is not `https` on a vendor domain, and `needs-info` when the part number
   cannot be read or a confirmation box is not ticked. Editing the issue re-runs the check and clears the label.
 
 A request that is a datasheet erratum is moved to the driver's repository after triage, because it changes that
